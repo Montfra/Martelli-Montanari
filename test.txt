@@ -1,0 +1,8 @@
+f(X) = f(Y)
+X = Y
+x = Y, X = a
+F f(X) = X
+f(X, Y) = f(A, B)
+f(X) = g(S)
+f(X, Y) = f(g(Z), h(a)), Z = f(Y)
+F f(X,Y) = f(g(Z),h(a)), Z = f(X)
