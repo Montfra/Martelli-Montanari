@@ -6,3 +6,19 @@ f(X, Y) = f(A, B)
 f(X) = g(S)
 f(X, Y) = f(g(Z), h(a)), Z = f(Y)
 F f(X,Y) = f(g(Z),h(a)), Z = f(X)
+a = a
+F a = b
+X = X
+a = X
+X = Y
+f(a,X) = f(a,b)
+F f(a) = g(a)
+f(X) = f(Y)
+F f(X) = g(Y)
+F f(X) = f(Y,Z)
+f(g(X)) = f(Y)
+f(g(X),X) = f(Y,a)
+F X = f(X)
+X = Y, Y = a
+a = Y, X = Y
+F X = a, b = X

@@ -5,8 +5,13 @@ import sys
 
 f = open('test.txt')
 
-for line in f:
+cmpt = 1
 
+for line in f:
+    
+    sys.stdout.write("%s " % cmpt)
+
+    cmpt += 1
     if line[0] == 'F' and line[1] == ' ':
         end1 = "false"
         line = line[2:]
