@@ -41,15 +41,15 @@ occurCheck(E, T) :- nonvar(T), compound(T), arg(I, T, Value), occurCheck(E, Valu
 
 % REDUIT %
 reduit(delete, E ?= T, [E ?= T | R], R) :- regle(E ?= T, delete).
-reduit(orient, E ?= T, [E ?= T | R], [T ?= E | R]) :- regle(E ?= T, orient), !, echo('ORIENT'), echo(E ?= T), echo('\n').
-reduit(simplify, E ?= T, [E ?= T | R], R) :- regle(E ?= T, simplify), !, E = T, echo('SIMPLIFY'), echo(E ?= T), echo('\n').
-reduit(rename, E ?= T, [E ?= T | R], R) :- regle(E ?= T, rename), !, E = T, echo('RENAME'), echo(E ?= T), echo('\n').
-reduit(expand, E ?= T, [E ?= T | R], R) :- regle(E ?= T, expand), !, E = T, echo('EXPAND'), echo(E ?= T), echo('\n').
+reduit(orient, E ?= T, [E ?= T | R], [T ?= E | R]) :- regle(E ?= T, orient), !, echo('ORIENT '), echo(E ?= T), echo('\n').
+reduit(simplify, E ?= T, [E ?= T | R], R) :- regle(E ?= T, simplify), !, E = T, echo('SIMPLIFY '), echo(E ?= T), echo('\n').
+reduit(rename, E ?= T, [E ?= T | R], R) :- regle(E ?= T, rename), !, E = T, echo('RENAME '), echo(E ?= T), echo('\n').
+reduit(expand, E ?= T, [E ?= T | R], R) :- regle(E ?= T, expand), !, E = T, echo('EXPAND '), echo(E ?= T), echo('\n').
 reduit(decompose, E ?= T, [E ?= T | R], I) :- regle(E ?= T, decompose), !, 
   	E=..XE,T=..XT,
     deleteFirst(XE, XXE), deleteFirst(XT, XXT),
     decompose(XXE, XXT, RES),
-	append(R, RES, I), echo('DECOMPOSE'), echo(E ?= T), echo('\n').
+	append(R, RES, I), echo('DECOMPOSE '), echo(E ?= T), echo('\n').
 
 
 
