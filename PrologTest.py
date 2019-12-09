@@ -28,15 +28,18 @@ for line in f:
     line2 = line.replace("=", "?=")
     line3 = line2.rstrip()
     #print(line2)
-    command = "printf 'unify([" + line3 + "], choix_premier).'" + " | swipl test.pl"
+    command = "printf 'no_trace_unify([" + line3 + "], choix_premier).'" + " | swipl test.pl"
     #print(command)
     result = subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True)
     endString = result.split(".")[10]
 
     endd = re.sub(r'^SYSTEM.*\n?', '', endString, flags=re.MULTILINE)
+    endd = re.sub(r'^ORIENT.*\n?', '', endd, flags=re.MULTILINE)
+    endd = re.sub(r'^RENAME.*\n?', '', endd, flags=re.MULTILINE)
+    endd = re.sub(r'^EXPAND.*\n?', '', endd, flags=re.MULTILINE)
+    endd = re.sub(r'^DECOMPOSE.*\n?', '', endd, flags=re.MULTILINE)
     end2 = endd.rstrip()
     end2 = end2.replace("\n", "")
-    end2 = re.sub(r'^Unification.*true?', 'false', end2, flags=re.MULTILINE)
     #print(end2)
 
     if end1 == end2:
