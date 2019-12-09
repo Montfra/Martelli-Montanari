@@ -2,7 +2,9 @@ f(X) = f(Y)
 X = Y
 x = Y, X = a
 F f(X) = X
+F X = f(g(X))
 f(X, Y) = f(A, B)
+f(g(X)) = f(g(Y))
 f(X) = g(S)
 f(X, Y) = f(g(Z), h(a)), Z = f(Y)
 F f(X,Y) = f(g(Z),h(a)), Z = f(X)

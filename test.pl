@@ -11,16 +11,16 @@ echo(T) :- echo_on, !, write(T).
 echo(_).
 
 % for decompose
-deleteFirst([H|T], R) :- R = T.
 
 decompose([XE|HE], [XT|HT], [R|H]) :- R = XE ?= XT, decompose(HE, HT, H).
 decompose([], [], R) :- R = [].
 
+arguments(E, [A|B]) :- argument(E, 1, [A|B]), !.
+argument(E, I, [A|B]) :- functor(E, _, Arity), I =< Arity, arg(I, E, Res), A = Res, succ(I, S), argument(E, S, B), !.
+argument(E, I, B) :- functor(E, _, Arity), I > Arity, B = [], !.
 
 
-
-
-%%################  EXERCICE 1  ################%%
+%################  EXERCICE 1  ################%
 
 % REGLE %
 regle(E ?= T, decompose) :- compound(E), compound(T), functor(E, Name, Arity), functor(T, Name, Arity), !.
@@ -40,48 +40,72 @@ occurCheck(E, T) :- nonvar(T), compound(T), arg(I, T, Value), occurCheck(E, Valu
 
 
 % REDUIT %
-reduit(delete, E ?= T, [E ?= T | R], R) :- regle(E ?= T, delete).
+reduit(delete, E ?= T, [E ?= T | R], R) :- regle(E ?= T, delete), echo('DELETE '), echo(E ?= T), echo('\n').
 reduit(orient, E ?= T, [E ?= T | R], [T ?= E | R]) :- regle(E ?= T, orient), !, echo('ORIENT '), echo(E ?= T), echo('\n').
 reduit(simplify, E ?= T, [E ?= T | R], R) :- regle(E ?= T, simplify), !, E = T, echo('SIMPLIFY '), echo(E ?= T), echo('\n').
 reduit(rename, E ?= T, [E ?= T | R], R) :- regle(E ?= T, rename), !, E = T, echo('RENAME '), echo(E ?= T), echo('\n').
 reduit(expand, E ?= T, [E ?= T | R], R) :- regle(E ?= T, expand), !, E = T, echo('EXPAND '), echo(E ?= T), echo('\n').
 reduit(decompose, E ?= T, [E ?= T | R], I) :- regle(E ?= T, decompose), !, 
-  	E=..XE,T=..XT,
-    deleteFirst(XE, XXE), deleteFirst(XT, XXT),
-    decompose(XXE, XXT, RES),
+    arguments(E, XE),
+    arguments(T, XT),
+    decompose(XE, XT, RES),
 	append(R, RES, I), echo('DECOMPOSE '), echo(E ?= T), echo('\n').
 
+reduit(check, _, _, _) :- fail, !.
+reduit(clash, _, _, _) :- fail, !.
 
 
 
 
 % UNIFICATION %
 unify([]) :- !.
-% unify([E|T]) :- regle(E, check), echo('Unification impossible :( \n'), !.
-% unify([E|T]) :- \+ regle(E, clash),  echo('Unification impossible :( \n'), !.
-unify([E|T]) :- echo('SYSTEM :'), echo([E|T]), echo('\n'), reduit(_, E, [E|T], RES), unify(RES), !.
-% unify([E|T]) :- \+ reduit(_, E, [E|T], RES), unify(T), !.
+unify([E|T]) :- clr_echo, echo('SYSTEM :'), echo([E|T]), echo('\n'), reduit(_, E, [E|T], RES), unify(RES), !.
 
 
 
 
 
 
-%%################  EXERCICE 2  ################%%
+%################  EXERCICE 2  ################%
 
 % STRATEGY %
 choix_premier([E ?= T|Y], Res, E ?= T, Regle) :- reduit(Regle, E ?= T, [E ?= T|Y], Res).
 
-choix_pondere([E ?= T|Y], Res, E ?= T, _) :- 
-    reduit(delete, E ?= T, [E ?= T|Y], Res), !;
-    reduit(rename, E ?= T, [E ?= T|Y], Res), !;
-    reduit(simplify, E ?= T, [E ?= T|Y], Res), !;
-    reduit(orient, E ?= T, [E ?= T|Y], Res), !;
-    reduit(decompose, E ?= T, [E ?= T|Y], Res), !;
-    reduit(expand, E ?= T, [E ?= T|Y], Res), !.
+choix_pondere([E ?= T|Y], Res, E ?= T, _) :- ponderation([E ?= T|Y], Res, E ?= T, 1), !.
+
+ponderation([E ?= T|Y], Res, E ?= T, 1) :- 
+reduit(check, E ?= T, [E ?= T|Y], Res), !;
+ponderation([E ?= T|Y], Res, E ?= T, 2).
+
+ponderation([E ?= T|Y], Res, E ?= T, 1) :- 
+reduit(clash, E ?= T, [E ?= T|Y], Res), !;
+ponderation([E ?= T|Y], Res, E ?= T, 2).
+
+ponderation([E ?= T|Y], Res, E ?= T, 2) :- 
+reduit(rename, E ?= T, [E ?= T|Y], Res), !;
+ponderation([E ?= T|Y], Res, E ?= T, 3).
+
+ponderation([E ?= T|Y], Res, E ?= T, 2) :- 
+reduit(simplify, E ?= T, [E ?= T|Y], Res), !;
+ponderation([E ?= T|Y], Res, E ?= T, 3).
+
+ponderation([E ?= T|Y], Res, E ?= T, 3) :- 
+reduit(orient, E ?= T, [E ?= T|Y], Res), !;
+ponderation([E ?= T|Y], Res, E ?= T, 4).
+
+ponderation([E ?= T|Y], Res, E ?= T, 4) :- 
+reduit(decompose, E ?= T, [E ?= T|Y], Res), !;
+ponderation([E ?= T|Y], Res, E ?= T, 5).
+
+ponderation([E ?= T|Y], Res, E ?= T, 5) :- 
+reduit(expand, E ?= T, [E ?= T|Y], Res), !;
+ponderation([E ?= T|Y], Res, E ?= T, 6).
+
+ponderation([E ?= T|Y], Res, E ?= T, 6) :- 
+reduit(delete, E ?= T, [E ?= T|Y], Res), !.
 
 choix_random([E ?= T|Y], Res, E ?= T, _) :- 
-    List = [0, 1, 2, 3, 4, 5],
+    List = [0, 1, 2, 3, 4, 5, 6, 7],
     random_member(X1, List),
     delete(List, X1, List1),
     
@@ -99,24 +123,28 @@ choix_random([E ?= T|Y], Res, E ?= T, _) :-
     
     random_member(X6, List5),
     delete(List5, X6, List6),
+
+    random_member(X7, List6),
+    delete(List6, X7, List7),
+
+    random_member(X8, List7),
+    delete(List7, X8, List8),
     
-    echo(X1), echo(List1),
     random(0,6, X1), random([E ?= T|Y], Res, E ?= T, Random), !;
     
-    echo(X2), echo(List2),
     random(0,6, X2), random([E ?= T|Y], Res, E ?= T, Random), !;
     
-    echo(X3), echo(List3),
     random(0,6, X3), random([E ?= T|Y], Res, E ?= T, Random), !;
     
-    echo(X4), echo(List4),
     random(0,6, X4), random([E ?= T|Y], Res, E ?= T, Random), !;
     
-    echo(X5), echo(List5),
-    random(0,6, X4), random([E ?= T|Y], Res, E ?= T, Random), !;
+    random(0,6, X5), random([E ?= T|Y], Res, E ?= T, Random), !;
     
-    echo(X6), echo(List6),
-    random(0,6, X2), random([E ?= T|Y], Res, E ?= T, Random), !.
+    random(0,6, X6), random([E ?= T|Y], Res, E ?= T, Random), !;
+
+    random(0,6, X7), random([E ?= T|Y], Res, E ?= T, Random), !;
+
+    random(0,6, X8), random([E ?= T|Y], Res, E ?= T, Random), !.
 
 random([E ?= T|Y], Res, E ?= T, 0) :- 
     reduit(rename, E ?= T, [E ?= T|Y], Res), !.
@@ -136,24 +164,25 @@ random([E ?= T|Y], Res, E ?= T, 4) :-
 random([E ?= T|Y], Res, E ?= T, 5) :- 
     reduit(delete, E ?= T, [E ?= T|Y], Res), !.
 
+random([E ?= T|Y], Res, E ?= T, 6) :- 
+    reduit(check, E ?= T, [E ?= T|Y], Res), !.
+
+random([E ?= T|Y], Res, E ?= T, 7) :- 
+    reduit(clash, E ?= T, [E ?= T|Y], Res), !.
+
 % UNIFICATION %
 
 unify([], choix_premier) :- !.
-% unify([E|T], choix_premier) :- regle(E, check), echo('Unification impossible CHECK :( \n'), echo(E), !.
-% unify([E|T], choix_premier) :- \+ regle(E, clash),  echo('Unification impossible CLASH :( \n'), echo(E), !.
-unify([E|T], choix_premier) :-  echo('SYSTEM :'), echo([E|T]), echo('\n'), choix_premier([E|T], RES, E, Regle), unify(RES, choix_premier), !.
-% unify([E|T], choix_premier) :- \+ choix_premier([E|T], RES, E, Regle), unify(T, choix_premier), !.
+unify([E|T], choix_premier) :-  clr_echo, echo('SYSTEM :'), echo([E|T]), echo('\n'), choix_premier([E|T], RES, E, Regle), unify(RES, choix_premier), !.
 
 unify([], choix_pondere) :- !.
-unify([E|T], choix_pondere) :-  echo('SYSTEM :'), echo([E|T]), echo('\n'), choix_pondere([E|T], RES, E, Regle), unify(RES, choix_pondere), !.
-% unify([E|T], choix_pondere) :- \+ choix_pondere([E|T], RES, E, Regle), unify(T, choix_pondere), !.
+unify([E|T], choix_pondere) :-  clr_echo, echo('SYSTEM :'), echo([E|T]), echo('\n'), choix_pondere([E|T], RES, E, Regle), unify(RES, choix_pondere), !.
 
 
 unify([], choix_random) :- !.
-unify([E|T], choix_random) :-  echo('SYSTEM :'), echo([E|T]), echo('\n'), choix_random([E|T], RES, E, Regle), unify(RES, choix_random), !.
-% unify([E|T], choix_random) :- \+ choix_random([E|T], RES, E, Regle), unify(T, choix_random), !.
+unify([E|T], choix_random) :-  clr_echo, echo('SYSTEM :'), echo([E|T]), echo('\n'), choix_random([E|T], RES, E, Regle), unify(RES, choix_random), !.
 
- no_trace_unify(P,S) :-
+no_trace_unify(P,S) :-
   clr_echo, unify(P,S).
 
 trace_unify(P,S) :- 

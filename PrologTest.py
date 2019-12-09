@@ -16,20 +16,14 @@ for line in f:
         end1 = "false"
         line = line[2:]
     else:
-        #print line
         command = "printf '" + line + ".'" + " | swipl"
-        #print(command)
         result = subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True)
         endString = result.split(".")[10]
         end1 = endString.replace("\n", "")
-        #print(end1)
 
-    #print line
     line2 = line.replace("=", "?=")
     line3 = line2.rstrip()
-    #print(line2)
-    command = "printf 'no_trace_unify([" + line3 + "], choix_premier).'" + " | swipl test.pl"
-    #print(command)
+    command = "printf 'trace_unify([" + line3 + "], choix_pondere).'" + " | swipl test.pl"
     result = subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True)
     endString = result.split(".")[10]
 
@@ -38,9 +32,9 @@ for line in f:
     endd = re.sub(r'^RENAME.*\n?', '', endd, flags=re.MULTILINE)
     endd = re.sub(r'^EXPAND.*\n?', '', endd, flags=re.MULTILINE)
     endd = re.sub(r'^DECOMPOSE.*\n?', '', endd, flags=re.MULTILINE)
+    endd = re.sub(r'^DELETE.*\n?', '', endd, flags=re.MULTILINE)
     end2 = endd.rstrip()
     end2 = end2.replace("\n", "")
-    #print(end2)
 
     if end1 == end2:
         print("Test OK ;)")
