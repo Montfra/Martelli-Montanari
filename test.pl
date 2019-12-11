@@ -10,11 +10,12 @@ clr_echo :- retractall(echo_on).
 echo(T) :- echo_on, !, write(T).
 echo(_).
 
-% for decompose
 
+% décompose les arguments des fonctions 
 decompose([XE|HE], [XT|HT], [R|H]) :- R = XE ?= XT, decompose(HE, HT, H).
 decompose([], [], R) :- R = [].
 
+% arguments récupère les arguments d'une fonction et les place dans un liste
 arguments(E, [A|B]) :- argument(E, 1, [A|B]), !.
 argument(E, I, [A|B]) :- functor(E, _, Arity), I =< Arity, arg(I, E, Res), A = Res, succ(I, S), argument(E, S, B), !.
 argument(E, I, B) :- functor(E, _, Arity), I > Arity, B = [], !.
@@ -27,13 +28,13 @@ regle(E ?= T, decompose) :- compound(E), compound(T), functor(E, Name, Arity), f
 regle(E ?= T, rename) :- var(E), var(T), !.
 regle(E ?= T, clash):- \+ regle(E ?= T, decompose),!.
 regle(E ?= T, orient) :- nonvar(E), var(T), !.
-regle(E ?= T, check) :- E \== T, occurCheck(E, T), !.
-regle(E ?= T, expand) :- var(E), compound(T), \+ occurCheck(E, T), !.
+regle(E ?= T, check) :- E \== T, occur_check(E, T), !.
+regle(E ?= T, expand) :- var(E), compound(T), \+ occur_check(E, T), !.
 regle(E ?= T, simplify) :- var(E), atomic(T), !.
 regle(E ?= T, delete) :- E == T.
 
-occurCheck(E, T) :- var(E), var(T), E==T, !.
-occurCheck(E, T) :- nonvar(T), compound(T), arg(I, T, Value), occurCheck(E, Value), !.
+occur_check(E, T) :- var(E), var(T), E==T, !.
+occur_check(E, T) :- nonvar(T), compound(T), arg(I, T, Value), occur_check(E, Value), !.
 
 
 
@@ -49,7 +50,7 @@ reduit(decompose, E ?= T, [E ?= T | R], I) :- regle(E ?= T, decompose), !,
     arguments(E, XE),
     arguments(T, XT),
     decompose(XE, XT, RES),
-	append(R, RES, I), echo('DECOMPOSE '), echo(E ?= T), echo('\n').
+    append(R, RES, I), echo('DECOMPOSE '), echo(E ?= T), echo('\n').
 
 reduit(check, _, _, _) :- fail, !.
 reduit(clash, _, _, _) :- fail, !.
@@ -58,8 +59,8 @@ reduit(clash, _, _, _) :- fail, !.
 
 
 % UNIFICATION %
-unify([]) :- !.
-unify([E|T]) :- clr_echo, echo('SYSTEM :'), echo([E|T]), echo('\n'), reduit(_, E, [E|T], RES), unify(RES), !.
+unifie([]) :- !.
+unifie([E|T]) :- set_echo, echo('SYSTEM :'), echo([E|T]), echo('\n'), reduit(_, E, [E|T], RES), unifie(RES), !.
 
 
 
@@ -72,6 +73,8 @@ unify([E|T]) :- clr_echo, echo('SYSTEM :'), echo([E|T]), echo('\n'), reduit(_, E
 choix_premier([E ?= T|Y], Res, E ?= T, Regle) :- reduit(Regle, E ?= T, [E ?= T|Y], Res).
 
 choix_pondere([E ?= T|Y], Res, E ?= T, _) :- ponderation([E ?= T|Y], Res, E ?= T, 1), !.
+
+% Définie l'ordre de préférence du choix pondéré
 
 ponderation([E ?= T|Y], Res, E ?= T, 1) :- 
 reduit(check, E ?= T, [E ?= T|Y], Res), !;
@@ -104,6 +107,8 @@ ponderation([E ?= T|Y], Res, E ?= T, 6).
 ponderation([E ?= T|Y], Res, E ?= T, 6) :- 
 reduit(delete, E ?= T, [E ?= T|Y], Res), !.
 
+
+% Strategy aléatoire.
 choix_random([E ?= T|Y], Res, E ?= T, _) :- 
     List = [0, 1, 2, 3, 4, 5, 6, 7],
     random_member(X1, List),
@@ -146,6 +151,8 @@ choix_random([E ?= T|Y], Res, E ?= T, _) :-
 
     random(0,6, X8), random([E ?= T|Y], Res, E ?= T, Random), !.
 
+
+% Vérifie dans l'ordre les reductions.
 random([E ?= T|Y], Res, E ?= T, 0) :- 
     reduit(rename, E ?= T, [E ?= T|Y], Res), !.
 
@@ -170,21 +177,21 @@ random([E ?= T|Y], Res, E ?= T, 6) :-
 random([E ?= T|Y], Res, E ?= T, 7) :- 
     reduit(clash, E ?= T, [E ?= T|Y], Res), !.
 
+
 % UNIFICATION %
 
-unify([], choix_premier) :- !.
-unify([E|T], choix_premier) :- echo('SYSTEM :'), echo([E|T]), echo('\n'), choix_premier([E|T], RES, E, Regle), unify(RES, choix_premier), !.
+unifie([], choix_premier) :- !.
+unifie([E|T], choix_premier) :- echo('SYSTEM :'), echo([E|T]), echo('\n'), choix_premier([E|T], RES, E, Regle), unifie(RES, choix_premier), !.
 
-unify([], choix_pondere) :- !.
-unify([E|T], choix_pondere) :- echo('SYSTEM :'), echo([E|T]), echo('\n'), choix_pondere([E|T], RES, E, Regle), unify(RES, choix_pondere), !.
+unifie([], choix_pondere) :- !.
+unifie([E|T], choix_pondere) :- echo('SYSTEM :'), echo([E|T]), echo('\n'), choix_pondere([E|T], RES, E, Regle), unifie(RES, choix_pondere), !.
 
 
-unify([], choix_random) :- !.
-unify([E|T], choix_random) :- echo('SYSTEM :'), echo([E|T]), echo('\n'), choix_random([E|T], RES, E, Regle), unify(RES, choix_random), !.
+unifie([], choix_random) :- !.
+unifie([E|T], choix_random) :- echo('SYSTEM :'), echo([E|T]), echo('\n'), choix_random([E|T], RES, E, Regle), unifie(RES, choix_random), !.
 
 unif(P,S) :-
-  clr_echo, unify(P,S).
+  clr_echo, unifie(P,S).
 
-trace_unify(P,S) :- 
-  set_echo, unify(P,S).
-  
+trace_unif(P,S) :- 
+  set_echo, unifie(P,S).
