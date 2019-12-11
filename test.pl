@@ -173,16 +173,16 @@ random([E ?= T|Y], Res, E ?= T, 7) :-
 % UNIFICATION %
 
 unify([], choix_premier) :- !.
-unify([E|T], choix_premier) :-  clr_echo, echo('SYSTEM :'), echo([E|T]), echo('\n'), choix_premier([E|T], RES, E, Regle), unify(RES, choix_premier), !.
+unify([E|T], choix_premier) :- echo('SYSTEM :'), echo([E|T]), echo('\n'), choix_premier([E|T], RES, E, Regle), unify(RES, choix_premier), !.
 
 unify([], choix_pondere) :- !.
-unify([E|T], choix_pondere) :-  clr_echo, echo('SYSTEM :'), echo([E|T]), echo('\n'), choix_pondere([E|T], RES, E, Regle), unify(RES, choix_pondere), !.
+unify([E|T], choix_pondere) :- echo('SYSTEM :'), echo([E|T]), echo('\n'), choix_pondere([E|T], RES, E, Regle), unify(RES, choix_pondere), !.
 
 
 unify([], choix_random) :- !.
-unify([E|T], choix_random) :-  clr_echo, echo('SYSTEM :'), echo([E|T]), echo('\n'), choix_random([E|T], RES, E, Regle), unify(RES, choix_random), !.
+unify([E|T], choix_random) :- echo('SYSTEM :'), echo([E|T]), echo('\n'), choix_random([E|T], RES, E, Regle), unify(RES, choix_random), !.
 
-no_trace_unify(P,S) :-
+unif(P,S) :-
   clr_echo, unify(P,S).
 
 trace_unify(P,S) :- 
