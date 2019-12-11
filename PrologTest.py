@@ -16,14 +16,14 @@ for line in f:
         end1 = "false"
         line = line[2:]
     else:
-        command = "printf '" + line + ".'" + " | swipl"
+        command = "printf '" + line + ".'" + " | swipl test.pl"
         result = subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True)
         endString = result.split(".")[10]
         end1 = endString.replace("\n", "")
 
     line2 = line.replace("=", "?=")
     line3 = line2.rstrip()
-    command = "printf 'trace_unify([" + line3 + "], choix_pondere).'" + " | swipl test.pl"
+    command = "printf 'unif([" + line3 + "], choix_random).'" + " | swipl test.pl"
     result = subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True)
     endString = result.split(".")[10]
 
